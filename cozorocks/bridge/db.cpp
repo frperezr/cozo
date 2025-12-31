@@ -125,6 +125,10 @@ shared_ptr <RocksDbBridge> open_db(const DbOpts &opts, RocksDbStatus &status) {
     }
     if (opts.use_bloom_filter) {
         BlockBasedTableOptions table_options;
+        table_options.block_size = 16 * 1024;
+        table_options.cache_index_and_filter_blocks = true;
+        table_options.pin_l0_filter_and_index_blocks_in_cache = true;
+        table_options.format_version = 5;
         table_options.filter_policy.reset(NewBloomFilterPolicy(opts.bloom_filter_bits_per_key, false));
         table_options.whole_key_filtering = opts.bloom_filter_whole_key_filtering;
         if (cache != nullptr) {
