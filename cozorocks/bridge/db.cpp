@@ -102,6 +102,18 @@ shared_ptr <RocksDbBridge> open_db(const DbOpts &opts, RocksDbStatus &status) {
     }
     options.create_if_missing = opts.create_if_missing;
     options.paranoid_checks = opts.paranoid_checks;
+
+    // Memory limit options for write buffers (memtables)
+    if (opts.write_buffer_size > 0) {
+        options.write_buffer_size = opts.write_buffer_size;
+    }
+    if (opts.max_write_buffer_number > 0) {
+        options.max_write_buffer_number = static_cast<int>(opts.max_write_buffer_number);
+    }
+    if (opts.db_write_buffer_size > 0) {
+        options.db_write_buffer_size = opts.db_write_buffer_size;
+    }
+
     if (opts.enable_blob_files) {
         options.enable_blob_files = true;
 

@@ -28,6 +28,9 @@ const CURRENT_STORAGE_VERSION: u64 = 3;
 #[derive(Default)]
 pub struct RocksDbOpts {
     pub block_cache_size: usize,
+    pub write_buffer_size: usize,
+    pub max_write_buffer_number: usize,
+    pub db_write_buffer_size: usize,
 }
 
 /// Creates a RocksDB database object.
@@ -114,6 +117,15 @@ pub fn new_cozo_rocksdb_with_opts(path: impl AsRef<Path>, opts: RocksDbOpts) -> 
 
     if opts.block_cache_size > 0 {
         db_builder = db_builder.block_cache_size(opts.block_cache_size);
+    }
+    if opts.write_buffer_size > 0 {
+        db_builder = db_builder.write_buffer_size(opts.write_buffer_size);
+    }
+    if opts.max_write_buffer_number > 0 {
+        db_builder = db_builder.max_write_buffer_number(opts.max_write_buffer_number);
+    }
+    if opts.db_write_buffer_size > 0 {
+        db_builder = db_builder.db_write_buffer_size(opts.db_write_buffer_size);
     }
 
     let db = db_builder.build()?;

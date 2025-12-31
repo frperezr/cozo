@@ -146,6 +146,9 @@ impl DbInstance {
     /// `path` is ignored for `mem` and `tikv` engines.
     /// `options` is a JSON string. For `rocksdb`, supported options are:
     /// * `block_cache_size`: size of the block cache in bytes (default: 0, meaning RocksDB default)
+    /// * `write_buffer_size`: size of a single memtable in bytes (default: 64MB)
+    /// * `max_write_buffer_number`: max number of memtables (default: 2)
+    /// * `db_write_buffer_size`: total memory budget for all memtables (default: 0, unlimited)
     /// For `tikv`, see the TiKV documentation.
     #[allow(unused_variables)]
     pub fn new(engine: &str, path: impl AsRef<Path>, options: &str) -> Result<Self> {
@@ -160,10 +163,19 @@ impl DbInstance {
                 struct RocksOpts {
                     #[serde(default)]
                     block_cache_size: usize,
+                    #[serde(default)]
+                    write_buffer_size: usize,
+                    #[serde(default)]
+                    max_write_buffer_number: usize,
+                    #[serde(default)]
+                    db_write_buffer_size: usize,
                 }
                 let opts: RocksOpts = serde_json::from_str(options).unwrap_or_default();
                 Self::RocksDb(new_cozo_rocksdb_with_opts(path, RocksDbOpts {
                     block_cache_size: opts.block_cache_size,
+                    write_buffer_size: opts.write_buffer_size,
+                    max_write_buffer_number: opts.max_write_buffer_number,
+                    db_write_buffer_size: opts.db_write_buffer_size,
                 })?)
             }
             #[cfg(feature = "storage-new-rocksdb")]
