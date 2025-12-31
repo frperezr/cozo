@@ -59,7 +59,7 @@ shared_ptr <RocksDbBridge> open_db(const DbOpts &opts, RocksDbStatus &status) {
     shared_ptr<Cache> cache = nullptr;
 
     if (opts.block_cache_size > 0) {
-        cache = NewLRUCache(1 * 1024 * 1024 * 1024);
+        cache = NewLRUCache(opts.block_cache_size);
     }
 
     if (!opts.options_path.empty()) {
@@ -77,13 +77,18 @@ shared_ptr <RocksDbBridge> open_db(const DbOpts &opts, RocksDbStatus &status) {
         if (cache != nullptr) {
             for (size_t i = 0; i < loaded_cf_descs.size(); ++i) {
                 auto* loaded_bbt_opt =
-                        loaded_cf_descs[0]
+                        loaded_cf_descs[i]
                                 .options.table_factory->GetOptions<BlockBasedTableOptions>();
                 loaded_bbt_opt->block_cache = cache;
             }
         }
 
         options = Options(loaded_db_opt, loaded_cf_descs[0].options);
+    } else if (cache != nullptr) {
+        auto* bbt_opt = options.table_factory->GetOptions<BlockBasedTableOptions>();
+        if (bbt_opt != nullptr) {
+            bbt_opt->block_cache = cache;
+        }
     }
 
     if (opts.prepare_for_bulk_load) {
@@ -110,6 +115,9 @@ shared_ptr <RocksDbBridge> open_db(const DbOpts &opts, RocksDbStatus &status) {
         BlockBasedTableOptions table_options;
         table_options.filter_policy.reset(NewBloomFilterPolicy(opts.bloom_filter_bits_per_key, false));
         table_options.whole_key_filtering = opts.bloom_filter_whole_key_filtering;
+        if (cache != nullptr) {
+            table_options.block_cache = cache;
+        }
         options.table_factory.reset(NewBlockBasedTableFactory(table_options));
     }
     if (opts.use_capped_prefix_extractor) {

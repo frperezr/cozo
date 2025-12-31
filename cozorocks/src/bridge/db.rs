@@ -121,6 +121,10 @@ impl DbBuilder {
         self.opts.fixed_prefix_extractor_len = len;
         self
     }
+    pub fn block_cache_size(mut self, size: usize) -> Self {
+        self.opts.block_cache_size = size;
+        self
+    }
     pub fn build(self) -> Result<RocksDb, RocksDbStatus> {
         let mut status = RocksDbStatus::default();
 
